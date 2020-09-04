@@ -1,0 +1,45 @@
+# run as ansible-playbook hana_playbooks/whoami.yml --ask-become-pass
+- hosts: lab
+  gather_facts: false
+  
+  tasks:  
+  - name: sshuser > whoami
+    command: whoami
+    register: sshuser
+  - debug: var=sshuser.stdout_lines
+
+  - name: hardcoded_becomeuser > whoami
+    become: yes
+    become_user: sh1adm
+    command: whoami
+    register: hardcoded_becomeuser
+    changed_when: false
+  - debug: var=hardcoded_becomeuser.stdout_lines
+
+  - name: directory_op
+    command: "ls /hana/data"
+    register: v_diroutput
+    failed_when: 
+      - v_diroutput.rc == 2
+      - "Directory /hana/data is missing"
+    changed_when: false
+    check_mode: no
+  - debug: var=v_diroutput.stdout_lines[0]
+
+  - name: set<sidadm>
+    set_fact: 
+      sidadm_fact: "{{ v_diroutput.stdout_lines[0]|lower }}adm"
+    when:  v_diroutput.stdout_lines is defined  
+    changed_when: false
+    check_mode: no
+
+  - name: become <sidadm>
+    become: yes
+    become_user: "{{ sidadm_fact }}"
+    changed_when: false
+    command: whoami
+    register: becomeuser
+  - debug: var=becomeuser.stdout_lines
+ 
+
+  

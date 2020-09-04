@@ -1,0 +1,9 @@
+---
+- hosts: sapds4d01.cbi.net
+  tasks:
+  - name: Prints various Ansible facts
+    debug: 
+      var: ansible_facts
+    # debug:
+    #   msg: >
+         The default IPv4 address of {{ ansible_facts.fqdn }} is {{ ansible_facts.default_ipv4.address }} is {{ ansible_facts.hostname}}

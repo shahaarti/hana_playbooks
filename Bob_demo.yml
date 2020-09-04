@@ -1,0 +1,71 @@
+---
+- name: Run SAP Hana Cleaner Script
+  hosts: sap-hana
+
+  tasks:
+  - name: Get SID Name
+    command: "ls /hana/data"
+    register: dir_out
+    changed_when: false
+    check_mode: no
+
+  - name: Set SID name from directory output
+    set_fact:
+      server_sid: "{{ dir_out.stdout_lines[0] }}"
+    when:  dir_out.stdout_lines is defined
+    changed_when: false
+    check_mode: no
+
+  - name: Ensure SAP Hana Cleaner Folder Exists
+    become: yes
+    become_user: "{{ server_sid|lower }}adm"
+    file:
+      path: "/usr/sap/{{ server_sid }}/hanacleaner_history"
+      state: directory
+      mode: 0755
+      owner: " {{ server_sid|lower }}adm "
+      group: sapsys
+
+  - name: Check if hanacleaner_configile.txt exists
+    stat:
+      path: "/usr/sap/{{ server_sid }}/hanacleaner_configfile.txt"
+    register: hana_config
+    changed_when: false
+    check_mode: no
+
+  - name: Check if hanacleaner.py exists
+    stat:
+      path: "/usr/sap/{{ server_sid }}/hanacleaner.py"
+    register: hana_pythonscript
+    changed_when: false
+    check_mode: no
+
+  - name: Copy hanacleaner_configfile.txt to /usr/sap/SID
+    become: yes
+    become_user: "{{ server_sid|lower }}adm"
+    copy:
+      dest: "/usr/sap/{{ server_sid }}"
+      src: "files/hanacleaner_configfile.txt"
+      mode: 0755
+      owner: " {{ server_sid|lower }}adm "
+      group: sapsys
+    when:   hana_config is defined and not hana_config.stat.exists
+
+  - name: Copy hanacleaner.py to /usr/sap/SID
+    become: yes
+    become_user: "{{ server_sid|lower }}adm"
+    copy:
+      dest: "/usr/sap/{{ server_sid }}"
+      src: "files/hanacleaner.py"
+      mode: 0755
+      owner: " {{ server_sid|lower }}adm "
+      group: sapsys
+    when:   hana_pythonscript is defined and not hana_pythonscript.stat.exists
+    
+  - name: Run hanacleaner
+    become: yes
+    become_user: "{{ server_sid|lower }}adm"
+    command: "/usr/sap/{{ server_sid }}/hanacleaner.py -ff /usr/sap/{{ server_sid }}/hanacleaner_configfile.txt"
+    register: hana_cleaner
+    failed_when: hana_cleaner.rc != 0
+    when:   hana_pythonscript is defined and hana_pythonscript.stat.exists

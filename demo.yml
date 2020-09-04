@@ -1,0 +1,43 @@
+- hosts: sapds4d01.cbi.net
+  #become_user: sh1adm
+  #become: true
+  
+
+  #The "file" module only manages resources on the end host. The "copy" module is required to copy files to a target host.
+
+  tasks: 
+    
+  - name: know <SID>
+    #become: yes
+    #become_user: sh1adm
+    #file: path=./testlogin.log state=touch
+    command: "ls /hana/data"
+    register: dir_out
+    changed_when: false
+    #become_user: "{{ dir_out.stdout_lines[0] }}"
+    #command: whoami
+    #register: active_user
+    #ignore_errors: true will ignore the failed task and move on 
+
+  - debug: var=dir_out.stdout_lines[0]
+  
+  - name: Set <sidadm>
+    set_fact:
+      sidadm: "{{ dir_out.stdout_lines[0] | lower }}adm"
+
+  - debug: var=sidadm
+  #- debug: var=active_user.stdout_lines
+          #command: service hdb status
+          #command: "su - sh1adm -c 'HDB info'"
+          #wait_for: port=30015 timeout=1
+          #copy: src=hana_playbooks/hostname.yml dest=hana_playbooks/test.yml
+          #file: path=./test.log state=touch
+          #file: path=./test.log state=absent
+  #  tags: [ 'hana login']    
+#- include: database.yml (great way to run playbook inside another playbook)
+  #- debug: var=dir_out.stdout_lines
+  
+  #- debug: var=db_name
+  #- debug: var=vars
+
+  

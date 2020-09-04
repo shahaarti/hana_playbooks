@@ -1,0 +1,12 @@
+import sys
+
+from hdbcli import dbapi
+
+conn = dbapi.connect(
+            address="sapds4d01.cbi.net", 
+                port=30015, 
+                    user="hanacleaner", 
+                        password="h@na123CLn*rcb89"
+                        )
+
+print(conn.isconnected())

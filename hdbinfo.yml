@@ -1,0 +1,39 @@
+# run as ansible-playbook hana_playbooks/hdbinfo.yml --ask-become-pass
+- hosts: sapds4d01.cbi.net 
+  gather_facts: false
+  
+  tasks:  
+
+  - name: directory_op
+    command: "ls /hana/data"
+    register: v_diroutput
+    failed_when: 
+      - v_diroutput.rc == 2
+      - "Directory /hana/data is missing"
+    changed_when: false
+    check_mode: no
+  - debug: var=v_diroutput.stdout_lines[0]
+
+  - name: set<sidadm>
+    set_fact: 
+      sidadm_fact: "{{ v_diroutput.stdout_lines[0]|lower }}adm"
+    when:  v_diroutput.stdout_lines is defined  
+    changed_when: false
+    check_mode: no
+
+  - name: become <sidadm>
+    become: yes
+    become_user: "{{ sidadm_fact }}"
+    changed_when: false
+    command: whoami
+    register: becomeuser
+  - debug: var=becomeuser.stdout_lines
+ 
+  - name: hdb info
+    become: yes
+    become_user: "{{ sidadm_fact }}"
+    #shell: "/usr/sap/SH1/HDB00/HDB info|grep -i 'hdbnameserver'"
+    shell: "/usr/sap/SH1/SYS/exe/hdb/sapcontrol -nr 00 -function GetProcessList | grep -i 'hdbdaemon'"
+    register: hdbstatus
+  - debug: var=hdbstatus.stdout_lines[0]
+  

@@ -1,0 +1,15 @@
+---
+- name: loop 3 times
+  gather_facts: no
+  hosts: localhost
+  tasks:
+        - name: looping
+          shell: "echo This is my {{ item}} time "
+          loop:
+                  - first
+                  - second
+          register: echo_res
+
+        - name: show result
+          debug:
+                  var: echo_res
