@@ -1,7 +1,7 @@
 ---
 # usage: ansible-playbook hana_playbooks/hdbuserstore.yml -i <inventory_name> --ask-become-pass
 
-- hosts: sapdt2d01.cbi.net
+- hosts: qa
   tasks: 
     
   - name: Retrieve <SID>
@@ -17,25 +17,23 @@
     changed_when: false
 
   - name: Create hdbuserstore key HANACLEANERKEY
-  #  become: yes
-   # become_user: " {{ server_sid|lower }}adm"
-    shell: whoami
-    #shell: source /home/{{ server_sid|lower }}adm/.bashrc 
-    #&& /usr/sap/{{ server_sid }}/HDB00/exe/hdbuserstore set HANACLEANERKEY {{ ansible_facts.fqdn }}:30013 HANACLEANER 'h@na123CLn*rcb89'
+    become: yes
+    become_user: " {{ server_sid|lower }}adm"
+    shell: source /home/{{ server_sid|lower }}adm/.bashrc && /usr/sap/{{ server_sid }}/HDB00/exe/hdbuserstore set HANACLEANERKEY {{ ansible_facts.fqdn }}:30013 HANACLEANER 'h@na123CLn*rcb89'
     args:
       executable: /bin/bash
     register: create_key
 #    failed_when: create_key.rc != 0
   - debug: var=create_key.stdout_lines
   
-  # - name: Check hdbuserstore key
-  #   become: yes
-  #   become_user: " {{ server_sid|lower }}adm"
-  #   shell: source /home/{{ server_sid|lower }}adm/.bashrc && /usr/sap/{{ server_sid }}/HDB00/exe/hdbuserstore list HANACLEANERKEY
-  #   args:
-  #     executable: /bin/bash
-  #   register: key_exists
-  #   changed_when: false
-  # - debug: var=key_exists.stdout_lines
+  - name: Check hdbuserstore key
+    become: yes
+    become_user: " {{ server_sid|lower }}adm"
+    shell: source /home/{{ server_sid|lower }}adm/.bashrc && /usr/sap/{{ server_sid }}/HDB00/exe/hdbuserstore list HANACLEANERKEY
+    args:
+      executable: /bin/bash
+    register: key_exists
+    changed_when: false
+  - debug: var=key_exists.stdout_lines
 
   

@@ -5,7 +5,7 @@
 import sys
 from hdbcli import dbapi
 
-with open('/home/ashah/n1_nonprod_hana_inventory') as fp:
+with open('/home/ashah/nonprod_hana_inventory1') as fp:
     line = fp.readline()
     i = 1
     while line:
