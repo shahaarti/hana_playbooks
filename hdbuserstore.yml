@@ -1,7 +1,7 @@
 ---
 # usage: ansible-playbook hana_playbooks/hdbuserstore.yml -i <inventory_name> --ask-become-pass
 
-- hosts: qa
+- hosts: dev
   tasks: 
     
   - name: Retrieve <SID>
@@ -23,8 +23,9 @@
     args:
       executable: /bin/bash
     register: create_key
-#    failed_when: create_key.rc != 0
-  - debug: var=create_key.stdout_lines
+    failed_when: create_key.rc != 0
+#  - debug: var=create_key
+  #- debug: var=create_key.stdout_lines
   
   - name: Check hdbuserstore key
     become: yes
