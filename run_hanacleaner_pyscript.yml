@@ -1,0 +1,31 @@
+---
+
+# usage: ansible-playbook hana_playbooks/deploy-hanacleaner.yml -i <inventory_name> --ask-become-pass
+
+- name: Run SAP Hana Cleaner Script
+  hosts: all
+
+  tasks:
+  - name: Get SID Name
+    command: "ls /hana/data"
+    register: dir_out
+    changed_when: false
+    check_mode: no
+  - debug: var=dir_out.stdout_lines
+
+  - name: Set SID name from directory output
+    set_fact:
+      server_sid: "{{ dir_out.stdout_lines[0] }}"
+    when:  dir_out.stdout_lines is defined
+    changed_when: false
+    check_mode: no
+
+  - name: Run hanacleaner
+    become: yes
+    become_user: "{{ server_sid|lower }}adm"
+    shell: "source /home/{{ server_sid|lower }}adm/.bash_profile && /usr/sap/{{ server_sid }}/hanacleaner/hanacleaner.py -ff /usr/sap/{{ server_sid }}/hanacleaner/hanacleaner_configfile.txt"
+    args:
+      executable: /bin/bash
+    #command: "/usr/sap/{{ server_sid }}/hanacleaner/hanacleaner.py -ff /usr/sap/{{ server_sid }}/hanacleaner/hanacleaner_configfile.txt"
+    register: hana_cleaner
+    failed_when: hana_cleaner.rc != 0
