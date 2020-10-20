@@ -1,0 +1,37 @@
+---
+- name: Generate and email hana weekly audit report
+  hosts: localhost
+
+  tasks:
+  # Mapping of Reviewers to their databases is listed in hana_auditlog_dblist.yml    
+  - include_vars:
+      file: hana_auditlog_dblist.yml
+  
+  - name: Run python script to generate hana weekly auditlogs
+    command: "python3 /home/ashah/hana_playbooks/hana_weekly_auditlog.py"
+    register: audit_log
+
+  # - debug:
+  #     msg: "{{ audit_log.rc }}"
+
+  - name: Email the auditlog report
+    mail:
+      host: mail.cbrands.com
+      port: 25
+      from: hanaadmin@cbrands.com
+      to: 
+        - aarti.shah@cbrands.com
+        #- infoseccc@cbrands.com
+        #- "{{ item }}"
+      subject: Scheduled Hana weekly audit reports for {{ item.split('.')[0] }} - {{ ansible_facts.date_time.month }}{{ ansible_facts.date_time.day }}{{ ansible_facts.date_time.year }}
+      body: Auto generated hana weekly audit reports from Ansible Tower. Please do not reply to this email. For questions, reach out to aarti.shah@cbrands.com
+      attach: 
+        - {{ item.split('.')[0] }}_weekly_auditreport_{{ ansible_facts.date_time.month }}{{ ansible_facts.date_time.day }}{{ ansible_facts.date_time.year }}.xlsx
+    with_items: "{{ reviewers }}"
+    when: audit_log.rc == 0
+      
+  - name: Move the generated reports to the archive directory
+    command: "mv /home/CWC/ashah/hana_weekly_auditlogs/{{ item.split('.')[0] }}_weekly_auditreport_{{ ansible_facts.date_time.month }}{{ ansible_facts.date_time.day }}>
+    {{ ansible_facts.date_time.year }}.xlsx /home/CWC/ashah/hana_weekly_auditlogs/archive_hana_weekly_auditlogs/"
+    with_items: "{{ reviewers }}"
+    when: audit_log.rc == 0
