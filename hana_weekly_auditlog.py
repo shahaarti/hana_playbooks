@@ -2,6 +2,8 @@
 # usage:    python3 hana_weekly_auditlog.py
 # description: generates a separate workbook per reviewer. Each workbook contains one or more SAP hana system.
 #              Each workbook displays auditdata for Tenant as well as SYSTEMDB on a separate sheet.
+#              Reviewers are listed in hana_auditlog_dblist.yml
+#              Query is static and listed in hana_sql_query.yml
 
 import pandas as pd
 import yaml
@@ -21,6 +23,7 @@ mydate = dt.now().strftime(mask)
 #   k = PSH_S4, PFH_FIORI
 #   j.get(k) = sapqs4d01.cbi.net if k == PSH_S4
 with open(r'/home/ashah/hana_auditlog_dblist.yml') as fp:
+#with open(r'/home/ashah/hana_tp.yml') as fp:    
     dbdict = yaml.full_load(fp)
     for x, y in dbdict.items():
         for i,j in y.items():
@@ -60,5 +63,3 @@ with open(r'/home/ashah/hana_auditlog_dblist.yml') as fp:
                                             df.to_excel(writer, sheet_name = "{}_{}_{}".format(k,dbtype,c), header = True, index = False)
                             conn.close()
 fp.close()
-
-# #with pd.ExcelWriter("/home/CWC/ashah/hana_weekly_auditlogs/{}_auditreport_{}.xlsx".format(dbtype,mydate), engine="xlsxwriter", options = {'strings_to_numbers': True, 'strings_to_formulas': False}) as writer:
